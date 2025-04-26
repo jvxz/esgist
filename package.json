@@ -28,7 +28,7 @@
   ],
   "scripts": {
     "build": "tsup --clean --dts",
-    "dev": "tsup --watch",
+    "dev": "tsup --clean --watch",
     "lint": "eslint . && tsc --noEmit",
     "prepack": "nr build",
     "release": "bumpp && pnpm publish"
@@ -41,6 +41,8 @@
     "@clack/prompts": "^0.10.1",
     "@types/bun": "latest",
     "@types/node": "^22.15.2",
+    "arktype": "^2.1.20",
+    "effect": "^3.14.14",
     "eslint": "^9.25.1",
     "tsup": "^8.4.0"
   }

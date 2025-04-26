@@ -1,15 +1,12 @@
-import process from 'node:process'
 import * as p from '@clack/prompts'
 import c from 'ansis'
 import { cac } from 'cac'
+import { Cause, Effect, Exit } from 'effect'
 import { version } from '../package.json'
+import { run } from './run'
 
 function header() {
   p.intro(`${c.hex('#FEF0F5')`@jvxz/pura `}${c.dim`${version}`}`)
-}
-
-function outro() {
-  p.outro('Done! 🎉')
 }
 
 const cli = cac('@jvxz/pura')
@@ -24,15 +21,16 @@ cli
   })
   .action(async () => {
     header()
-    try {
-      p.log.message('Hello, world!')
-    }
-    catch (error) {
-      p.log.error(c.inverse.red(' Failed to migrate '))
-      p.log.error(c.red`✘ ${String(error)}`)
+
+    const exit = await Effect.runPromiseExit(run)
+
+    if (Exit.isFailure(exit)) {
+      p.log.error(c.inverse.red(' An error occurred... '))
+      p.log.error(c.red`✘ ${Cause.pretty(exit.cause)}`)
       process.exit(1)
     }
-    outro()
+
+    p.outro('Done! 🎉')
   })
 
 cli.help()
