@@ -10,8 +10,8 @@ class GistLinkError extends Data.TaggedError('GistLinkError')<{
   message?: string
 }> {}
 
-export const gistLinkPrompt = Effect.gen(function* () {
-  const res = yield* Effect.tryPromise({
+export const gistLinkPrompt = Effect.gen(function* (_) {
+  const res = yield* _(Effect.tryPromise({
     try: async () => withCancel(async () => p.text({
       message: 'Enter the URL of the gist:',
       placeholder: 'https://gist.github.com/...',
@@ -23,7 +23,13 @@ export const gistLinkPrompt = Effect.gen(function* () {
       cause: e,
       message: 'Failed to parse response',
     }),
-  })
+  }))
+
+  if (!res) {
+    return yield* Effect.fail(new GistLinkError({
+      message: 'Gist link is required',
+    }))
+  }
 
   return res
 })

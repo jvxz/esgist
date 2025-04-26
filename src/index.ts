@@ -1,4 +1,5 @@
 import * as p from '@clack/prompts'
+import { FetchHttpClient } from '@effect/platform'
 import c from 'ansis'
 import { cac } from 'cac'
 import { Cause, Effect, Exit } from 'effect'
@@ -22,11 +23,13 @@ cli
   .action(async () => {
     header()
 
-    const exit = await Effect.runPromiseExit(run)
+    const exit = await run
+      .pipe(Effect.provide(FetchHttpClient.layer))
+      .pipe(Effect.runPromiseExit)
 
     if (Exit.isFailure(exit)) {
       p.log.error(c.inverse.red(' An error occurred... '))
-      p.log.error(c.red`✘ ${Cause.pretty(exit.cause)}`)
+      p.log.error(c.red`${Cause.prettyErrors(exit.cause)}`)
       process.exit(1)
     }
 
