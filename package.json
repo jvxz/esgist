@@ -1,0 +1,47 @@
+{
+  "name": "@jvxz/pura",
+  "type": "module",
+  "version": "0.0.0",
+  "description": "gist → ESLint config",
+  "author": "jamie <jamie@wisp.bio> (https://github.com/jvxz/)",
+  "license": "MIT",
+  "homepage": "https://github.com/jvxz/pura",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jvxz/pura.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jvxz/pura/issues"
+  },
+  "keywords": [
+    "eslint-config"
+  ],
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": "./bin/index.js",
+  "files": [
+    "bin",
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup --clean --dts",
+    "dev": "tsup --watch",
+    "lint": "eslint . && tsc --noEmit",
+    "prepack": "nr build",
+    "release": "bumpp && pnpm publish"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^4.12.0",
+    "@clack/prompts": "^0.10.1",
+    "@types/bun": "latest",
+    "@types/node": "^22.15.2",
+    "eslint": "^9.25.1",
+    "tsup": "^8.4.0"
+  }
+}
