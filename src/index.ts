@@ -16,9 +16,9 @@ const cli = cac(name)
 cli
   .command('', 'Run the wizard')
 
-  .option('--gist <link>', 'Provide Gist to use for the config')
-  .option('--yes, -y', 'Skip Node.js project and commit warnings')
-  // TODO add manual package manager arg
+  .option('--yes, -y', 'Skip Node.js project and commit warnings (add --package-manager to restore dependency installation)')
+  .option('--package-manager, -p <name>', 'Manually specify package manager')
+  .option('--gist, -g <link>', 'Provide Gist to use for the config')
   .action(async (args: Args) => {
     header()
 

@@ -15,42 +15,39 @@ class PrepError extends Data.TaggedError('PrepError')<{
   message?: string
 }> {}
 
-function handleUncommittedChanges(args: Args) {
-  return Effect.gen(function* (_) {
-    if (args.yes) return Effect.void
-
-    const gitStatus = yield* _(
-      Effect.tryPromise({
-        try: async () => execa('git', ['status', '--porcelain']),
-        catch: e => new PrepError({
-          cause: e,
-          message: 'Failed to get git status',
-        }),
-      }),
-      Effect.option,
-    )
-
-    if (Option.isNone(gitStatus)) return Effect.void
-
-    const confirm = yield* Effect.tryPromise({
-      try: async () => withCancel(async () => p.confirm({
-        message: 'There are uncommitted changes. Continue anyway?',
-        initialValue: false,
-      })),
+const handleUncommittedChanges = Effect.gen(function* (_) {
+  const gitStatus = yield* _(
+    Effect.tryPromise({
+      try: async () => execa('git', ['status', '--porcelain']),
       catch: e => new PrepError({
         cause: e,
-        message: 'Failed to confirm uncommitted changes',
+        message: 'Failed to get git status',
       }),
-    })
+    }),
+    Effect.option,
+  )
 
-    if (!confirm) return abort()
+  if (Option.isNone(gitStatus)) return Effect.void
 
-    return Effect.void
+  const confirm = yield* Effect.tryPromise({
+    try: async () => withCancel(async () => p.confirm({
+      message: 'There are uncommitted changes. Continue anyway?',
+      initialValue: false,
+    })),
+    catch: e => new PrepError({
+      cause: e,
+      message: 'Failed to confirm uncommitted changes',
+    }),
   })
-}
+
+  if (!confirm) return abort()
+
+  return Effect.void
+})
 
 function handleNodeProject(yes: Args['yes']) {
   return Effect.gen(function* (_) {
+    // TODO allow manual override via args (--node-project)
     if (yes) return false
 
     const packageJson = yield* _(Effect.tryPromise(async () => readFile('package.json')), Effect.option)
@@ -61,7 +58,7 @@ function handleNodeProject(yes: Args['yes']) {
           message: 'You don\'t seem to be in a Node.js project. Continue anyway?',
           initialValue: true,
         })),
-        // TODO allow manual override via args (--node-project)
+        // TODO allow manual override via args (--node-project) pt. 2
         catch: e => new PrepError({
           cause: e,
           message: 'Failed to read package.json',
@@ -178,9 +175,15 @@ export interface PrepareResult {
 
 export function prepare(args: Args) {
   return Effect.gen(function* () {
-    yield* handleUncommittedChanges(args)
+    yield* Effect.orElse(
+      Effect.fromNullable(args.yes),
+      () => handleUncommittedChanges,
+    )
 
-    const packageManager = yield* getPm
+    const packageManager = yield* Effect.orElse(
+      Effect.fromNullable(args.packageManager),
+      () => getPm,
+    )
     const isNodeProject = yield* handleNodeProject(args.yes)
     const configFilename = yield* getConfig(args.yes)
 
