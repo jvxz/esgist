@@ -11,7 +11,7 @@ export function run(rawArgs: Args) {
   return Effect.gen(function* () {
     const args = yield* validateArgs(rawArgs)
 
-    const { configFilename, packageManager, isNodeProject } = yield* prepare
+    const { configFilename, packageManager, isNodeProject } = yield* prepare(args)
 
     const gistLink = yield* handleGistLink(args.gist)
     const gistData = yield* fetchGistData(gistLink)

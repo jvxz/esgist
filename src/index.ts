@@ -17,7 +17,8 @@ cli
   .command('', 'Run the wizard')
 
   .option('--gist <link>', 'Provide Gist to use for the config')
-  .option('--yes <link>', 'Provide Gist to use for the config')
+  .option('--yes, -y', 'Skip Node.js project and commit warnings')
+  // TODO add manual package manager arg
   .action(async (args: Args) => {
     header()
 
