@@ -1,6 +1,6 @@
 import { Console, Effect } from 'effect'
-import { fetchGistData } from './commands/fetch-gist-data'
-import { gistLinkPrompt } from './commands/gist-link'
+import { fetchGistData } from './sequences/fetch-gist-data'
+import { gistLinkPrompt } from './sequences/gist-link'
 
 export const run = Effect.gen(function* () {
   const gistLink = yield* gistLinkPrompt
