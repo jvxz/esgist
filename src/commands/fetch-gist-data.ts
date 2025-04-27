@@ -1,14 +1,16 @@
+import * as p from '@clack/prompts'
 import { HttpClient, HttpClientRequest, HttpClientResponse } from '@effect/platform'
-import { Data, Effect, Option, Schema } from 'effect'
+import { Data, Effect, Schema } from 'effect'
+import { withCancel } from '../lib/utils'
 
-const GIST_ID_REGEX = /https:\/\/gist\.github\.com\/[A-Z]+\/([A-Z]+(?:\d+[A-Z]+)+)/i
+const GIST_ID_REGEX = /https:\/\/gist\.github\.com\/[A-Z0-9]+\/([A-Z0-9]+)/i
 
 class GistLinkDataError extends Data.TaggedError('GistLinkDataError')<{
   cause?: unknown
   message?: string
 }> {}
 
-const schema = Schema.Struct({
+export const GistDataSchema = Schema.Struct({
   files: Schema.Record({
     key: Schema.String,
     value: Schema.Struct({
@@ -19,7 +21,7 @@ const schema = Schema.Struct({
 
 export function fetchGistData(gistLink: string) {
   return Effect.gen(function* (_) {
-    const gistId = yield* Effect.fromNullable(gistLink.match(GIST_ID_REGEX)?.[1])
+    const gistId = gistLink.match(GIST_ID_REGEX)?.[1]
 
     const client = yield* HttpClient.HttpClient
     const request = HttpClientRequest.get(`https://api.github.com/gists/${gistId}`).pipe(HttpClientRequest.setHeaders({
@@ -27,18 +29,45 @@ export function fetchGistData(gistLink: string) {
       gist_id: gistId,
     }))
 
-    const gistData = yield* _(
+    const { files: gistFiles } = yield* _(
       client.execute(request),
-      Effect.flatMap(HttpClientResponse.schemaBodyJson(schema)),
-      Effect.option,
+      Effect.flatMap(HttpClientResponse.schemaBodyJson(GistDataSchema)),
+      Effect.filterOrFail(
+        data => data !== null && data !== undefined,
+        () => new GistLinkDataError({
+          message: 'Could not get data from gist. Check if the gist link is valid and available publicly.',
+        }),
+      ),
+      Effect.mapError(e => new GistLinkDataError({
+        cause: e,
+        message: 'Could not get data from gist. Check if the gist link is valid and available publicly.',
+      })),
     )
 
-    if (Option.isNone(gistData)) {
-      return yield* Effect.fail(new GistLinkDataError({
-        message: 'An error occurred while fetching gist data. Did you provide a valid gist link?',
+    const gistFileNames = Object.keys(gistFiles)
+
+    if (gistFileNames.length > 1) {
+      const selectedGistFileName = yield* _(Effect.tryPromise({
+        try: async () => withCancel(async () => p.select({
+          message: 'Select a file:',
+          options: gistFileNames.map((name) => {
+            return {
+              label: name,
+              value: name,
+            }
+          }),
+        })),
+        catch: e => new GistLinkDataError({
+          cause: e,
+          message: 'Failed to select file',
+        }),
       }))
+
+      const { content } = yield* Effect.fromNullable(gistFiles[selectedGistFileName])
+      return content
     }
 
-    return gistData.value.files
+    const { content } = yield* Effect.fromNullable(gistFiles[gistFileNames[0]!])
+    return content
   })
 }

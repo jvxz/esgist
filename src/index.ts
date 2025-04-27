@@ -29,7 +29,7 @@ cli
 
     if (Exit.isFailure(exit)) {
       p.log.error(c.inverse.red(' An error occurred... '))
-      p.log.error(c.red`${Cause.prettyErrors(exit.cause)}`)
+      p.log.error(c.red`${Cause.pretty(exit.cause)}`)
       process.exit(1)
     }
 
