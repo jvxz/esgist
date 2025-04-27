@@ -16,7 +16,7 @@ export function run(rawArgs: Args) {
     const gistLink = yield* handleGistLink(args.gist)
     const gistData = yield* fetchGistData(gistLink)
 
-    // only install deps if in a node project & no manual pm arg was provided
+    // only install deps if in a node project or a manual pm arg was provided
     if (isNodeProject || args.packageManager) yield* handleConfigDeps(gistData.deps, packageManager)
 
     yield* handleConfigWrite(gistData.content, configFilename, packageManager)
