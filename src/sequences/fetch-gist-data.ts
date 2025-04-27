@@ -1,6 +1,7 @@
 import * as p from '@clack/prompts'
 import { HttpClient, HttpClientRequest, HttpClientResponse } from '@effect/platform'
-import { Data, Effect, Schema } from 'effect'
+import { Data, Effect } from 'effect'
+import { GistDataSchema } from '../lib/types/gist-data'
 import { withCancel } from '../lib/utils'
 
 const GIST_ID_REGEX = /https:\/\/gist\.github\.com\/[A-Z0-9]+\/([A-Z0-9]+)/i
@@ -9,15 +10,6 @@ class GistLinkDataError extends Data.TaggedError('GistLinkDataError')<{
   cause?: unknown
   message?: string
 }> {}
-
-export const GistDataSchema = Schema.Struct({
-  files: Schema.Record({
-    key: Schema.String,
-    value: Schema.Struct({
-      content: Schema.String,
-    }),
-  }),
-})
 
 export function fetchGistData(gistLink: string) {
   return Effect.gen(function* (_) {
@@ -62,12 +54,25 @@ export function fetchGistData(gistLink: string) {
           message: 'Failed to select file',
         }),
       }))
-
-      const { content } = yield* Effect.fromNullable(gistFiles[selectedGistFileName])
+      const content = yield* _(
+        Effect.fromNullable(gistFiles[selectedGistFileName]),
+        Effect.map(file => file.content.split('\n').slice(0, 10)),
+        Effect.mapError(e => new GistLinkDataError({
+          cause: e,
+          message: 'Failed to get content from gist',
+        })),
+      )
       return content
     }
 
-    const { content } = yield* Effect.fromNullable(gistFiles[gistFileNames[0]!])
+    const content = yield* _(
+      Effect.fromNullable(gistFiles[gistFileNames[0]!]),
+      Effect.map(file => file.content.split('\n').splice(0, 10)),
+      Effect.mapError(e => new GistLinkDataError({
+        cause: e,
+        message: 'Failed to get content from gist',
+      })),
+    )
     return content
   })
 }
