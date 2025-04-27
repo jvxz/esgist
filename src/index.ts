@@ -3,14 +3,14 @@ import { FetchHttpClient } from '@effect/platform'
 import c from 'ansis'
 import { cac } from 'cac'
 import { Cause, Effect, Exit } from 'effect'
-import { version } from '../package.json'
+import { name, version } from '../package.json'
 import { run } from './run'
 
 function header() {
-  p.intro(`${c.hex('#FEF0F5')`@jvxz/pura `}${c.dim`${version}`}`)
+  p.intro(`${c.bold.white`${name} `}${c.dim`${version}`}`)
 }
 
-const cli = cac('@jvxz/pura')
+const cli = cac(name)
 
 cli
   .command('', 'Run the wizard')

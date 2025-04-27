@@ -1,20 +1,22 @@
 {
-  "name": "@jvxz/pura",
+  "name": "gslint",
   "type": "module",
   "version": "0.0.0",
-  "description": "gist → ESLint config",
-  "author": "jamie <jamie@wisp.bio> (https://github.com/jvxz/)",
+  "description": "GitHub Gist → ESLint config",
+  "author": "jamie <jamie@wisp.bio> (https://github.com/jvxz)",
   "license": "MIT",
-  "homepage": "https://github.com/jvxz/pura",
+  "homepage": "https://github.com/jvxz/gslint",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jvxz/pura.git"
+    "url": "git+https://github.com/jvxz/gslint.git"
   },
   "bugs": {
-    "url": "https://github.com/jvxz/pura/issues"
+    "url": "https://github.com/jvxz/gslint/issues"
   },
   "keywords": [
-    "eslint-config"
+    "eslint-config",
+    "github",
+    "gist"
   ],
   "exports": {
     ".": "./dist/index.js"
