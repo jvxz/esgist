@@ -7,10 +7,7 @@ import { execa } from 'execa'
 import { detect } from 'package-manager-detector'
 import { abort, withCancel } from '../lib/utils'
 
-const DEFAULT_PM: DetectResult = {
-  name: 'npm',
-  agent: 'npm',
-}
+const DEFAULT_PM = 'npm'
 
 class PrepError extends Data.TaggedError('PrepError')<{
   cause?: unknown
@@ -56,16 +53,17 @@ const handleNodeProject = Effect.gen(function* (_) {
         message: 'You don\'t seem to be in a Node.js project. Continue anyway?',
         initialValue: true,
       })),
+      // TODO allow manual override via args (--node-project)
       catch: e => new PrepError({
         cause: e,
         message: 'Failed to read package.json',
       }),
     })
 
-    if (confirm) return true
+    if (confirm) return false
   }
 
-  return false
+  return true
 })
 
 const getConfig: Effect.Effect<PrepareResult['configFilename'] | void, PrepError> = Effect.gen(function* (_) {
@@ -149,23 +147,26 @@ const getPm = Effect.gen(function* (_) {
 
   if (Option.isNone(pm)) return DEFAULT_PM
 
-  return pm.value.agent
+  return pm.value
 })
 
 export interface PrepareResult {
   configFilename: string
   packageManager: AgentName
+  isNodeProject: boolean
 }
 
 export const prepare = Effect.gen(function* () {
-  const packageManager = yield* getPm
-  yield* handleNodeProject
   yield* handleUncommittedChanges
+
+  const packageManager = yield* getPm
+  const isNodeProject = yield* handleNodeProject
   const configFilename = yield* getConfig
 
   return {
     configFilename,
     packageManager,
+    isNodeProject,
   } as PrepareResult
 })
 

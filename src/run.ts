@@ -6,13 +6,13 @@ import { handleGistLink } from './sequences/handle-gist-link'
 import { prepare } from './sequences/prepare'
 
 export const run = Effect.gen(function* () {
-  const { configFilename, packageManager } = yield* prepare
+  const { configFilename, packageManager, isNodeProject } = yield* prepare
 
   const gistLink = yield* handleGistLink
   const gistData = yield* fetchGistData(gistLink)
-  yield* handleConfigDeps(gistData.deps, packageManager)
-  yield* handleConfigWrite(gistData.content, configFilename, packageManager)
-  // yield* Console.log(gistData.content)
 
-  return gistData
+  // only install deps if in a node project
+  if (isNodeProject) yield* handleConfigDeps(gistData.deps, packageManager)
+
+  yield* handleConfigWrite(gistData.content, configFilename, packageManager)
 })
