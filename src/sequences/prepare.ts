@@ -1,10 +1,16 @@
+import type { AgentName, DetectResult } from 'package-manager-detector'
 import { readdir, readFile } from 'node:fs/promises'
 import * as p from '@clack/prompts'
 import c from 'ansis'
-
 import { Data, Effect, Option } from 'effect'
 import { execa } from 'execa'
+import { detect } from 'package-manager-detector'
 import { abort, withCancel } from '../lib/utils'
+
+const DEFAULT_PM: DetectResult = {
+  name: 'npm',
+  agent: 'npm',
+}
 
 class PrepError extends Data.TaggedError('PrepError')<{
   cause?: unknown
@@ -117,7 +123,7 @@ const getConfig: Effect.Effect<PrepareResult['configFilename'] | void, PrepError
 
   const confirm = yield* Effect.tryPromise({
     try: async () => withCancel(async () => p.confirm({
-      message: `ESLint config file found: ${c.yellow(config[0])}. Overwrite?`,
+      message: `ESLint config file found: ${c.bold.yellow(`\`${config[0]}\``)}. Overwrite?`,
       initialValue: true,
     })),
     catch: e => new PrepError({
@@ -131,17 +137,35 @@ const getConfig: Effect.Effect<PrepareResult['configFilename'] | void, PrepError
   return config[0]
 })
 
-interface PrepareResult {
+const getPm = Effect.gen(function* (_) {
+  const pm = yield* _(
+    Effect.tryPromise(async () => detect()),
+    Effect.filterOrElse(
+      e => e !== null,
+      () => Effect.succeed(DEFAULT_PM),
+    ),
+    Effect.option,
+  )
+
+  if (Option.isNone(pm)) return DEFAULT_PM
+
+  return pm.value.agent
+})
+
+export interface PrepareResult {
   configFilename: string
+  packageManager: AgentName
 }
 
 export const prepare = Effect.gen(function* () {
+  const packageManager = yield* getPm
   yield* handleNodeProject
   yield* handleUncommittedChanges
   const configFilename = yield* getConfig
 
   return {
     configFilename,
+    packageManager,
   } as PrepareResult
 })
 

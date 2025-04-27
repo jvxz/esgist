@@ -10,7 +10,7 @@ class GistLinkError extends Data.TaggedError('GistLinkError')<{
   message?: string
 }> {}
 
-export const gistLinkPrompt = Effect.gen(function* (_) {
+export const handleGistLink = Effect.gen(function* (_) {
   const res = yield* _(Effect.tryPromise({
     try: async () => withCancel(async () => p.text({
       message: 'Enter the URL of the gist:',

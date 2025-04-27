@@ -1,14 +1,8 @@
-import type { DetectResult } from 'package-manager-detector'
+import type { AgentName } from 'package-manager-detector'
 import * as p from '@clack/prompts'
 import { Data, Effect } from 'effect'
 import { execa } from 'execa'
-import { detect } from 'package-manager-detector'
 import { withCancel } from '../lib/utils'
-
-const DEFAULT_PM: DetectResult = {
-  name: 'npm',
-  agent: 'npm',
-}
 
 const JS_IMPORT_REGEX = /^import\s[\s\S]*?\sfrom\s+['"](@[^/]+\/[^/]+|[^/]+)(?:\/.*)?['"];?/
 
@@ -17,7 +11,7 @@ class GistDepsError extends Data.TaggedError('GistDepsError')<{
   message?: string
 }> {}
 
-export function handleConfigDeps(lines: string[]) {
+export function handleConfigDeps(lines: string[], pm: AgentName) {
   return Effect.gen(function* (_) {
     const pkgs = getPkgs(lines)
 
@@ -40,23 +34,12 @@ export function handleConfigDeps(lines: string[]) {
     })
 
     if (depsRes.length > 0) {
-      const pm = yield* _(
-        Effect.tryPromise({
-          try: async () => detect(),
-          catch: () => DEFAULT_PM,
-        }),
-        Effect.filterOrElse(
-          e => e !== null,
-          () => Effect.succeed(DEFAULT_PM),
-        ),
-      )
-
       yield* Effect.tryPromise({
         try: async () => withCancel(async () => p.tasks([
           {
-            title: `Installing dependencies with ${pm.name}`,
+            title: `Installing dependencies with ${pm}`,
             task: async () => {
-              await execa(pm.name, ['install', '--save-dev', ...depsRes])
+              await execa(pm, ['install', '--save-dev', ...depsRes])
               return 'Dependencies installed'
             },
           },
