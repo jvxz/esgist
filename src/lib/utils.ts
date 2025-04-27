@@ -11,10 +11,12 @@ import * as p from '@clack/prompts'
 export async function withCancel<T>(fn: () => Promise<T | symbol>) {
   const res = await fn()
 
-  if (p.isCancel(res)) {
-    p.outro('Aborting...')
-    process.exit(1)
-  }
+  if (p.isCancel(res)) abort()
 
   return res as T
+}
+
+export function abort() {
+  p.outro('Aborting...')
+  process.exit(1)
 }

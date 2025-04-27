@@ -5,8 +5,12 @@ import { execa } from 'execa'
 import { detect } from 'package-manager-detector'
 import { withCancel } from '../lib/utils'
 
-const JS_IMPORT_REGEX
-  = /^import\s[\s\S]*?\sfrom\s+['"](@[^/]+\/[^/]+|[^/]+)(?:\/.*)?['"];?/
+const DEFAULT_PM: DetectResult = {
+  name: 'npm',
+  agent: 'npm',
+}
+
+const JS_IMPORT_REGEX = /^import\s[\s\S]*?\sfrom\s+['"](@[^/]+\/[^/]+|[^/]+)(?:\/.*)?['"];?/
 
 class GistDepsError extends Data.TaggedError('GistDepsError')<{
   cause?: unknown
@@ -19,7 +23,7 @@ export function handleConfigDeps(lines: string[]) {
 
     const depsRes = yield* Effect.tryPromise({
       try: async () => withCancel(async () => p.multiselect({
-        message: 'Select packages to install:',
+        message: 'Select packages to install (select none to skip):',
         options: pkgs.map((pkg) => {
           return {
             label: pkg,
@@ -27,6 +31,7 @@ export function handleConfigDeps(lines: string[]) {
           }
         }),
         initialValues: pkgs,
+        required: false,
       })),
       catch: e => new GistDepsError({
         cause: e,
@@ -38,17 +43,11 @@ export function handleConfigDeps(lines: string[]) {
       const pm = yield* _(
         Effect.tryPromise({
           try: async () => detect(),
-          catch: () => ({
-            name: 'npm',
-            agent: 'npm',
-          } as DetectResult),
+          catch: () => DEFAULT_PM,
         }),
         Effect.filterOrElse(
           e => e !== null,
-          () => Effect.succeed({
-            name: 'npm',
-            agent: 'npm',
-          } as DetectResult),
+          () => Effect.succeed(DEFAULT_PM),
         ),
       )
 

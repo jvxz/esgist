@@ -16,13 +16,13 @@ export function fetchGistData(gistLink: string) {
     const gistId = gistLink.match(GIST_ID_REGEX)?.[1]
 
     const client = yield* HttpClient.HttpClient
-    const request = HttpClientRequest.get(`https://api.github.com/gists/${gistId}`).pipe(HttpClientRequest.setHeaders({
+    const req = HttpClientRequest.get(`https://api.github.com/gists/${gistId}`).pipe(HttpClientRequest.setHeaders({
       Accept: 'application/vnd.github.v3+json',
       gist_id: gistId,
     }))
 
     const { files: gistFiles } = yield* _(
-      client.execute(request),
+      client.execute(req),
       Effect.flatMap(HttpClientResponse.schemaBodyJson(GistDataSchema)),
       Effect.filterOrFail(
         data => data !== null && data !== undefined,
@@ -54,7 +54,8 @@ export function fetchGistData(gistLink: string) {
           message: 'Failed to select file',
         }),
       }))
-      const content = yield* _(
+
+      const deps = yield* _(
         Effect.fromNullable(gistFiles[selectedGistFileName]),
         Effect.map(file => file.content.split('\n').slice(0, 10)),
         Effect.mapError(e => new GistLinkDataError({
@@ -62,10 +63,14 @@ export function fetchGistData(gistLink: string) {
           message: 'Failed to get content from gist',
         })),
       )
-      return content
+
+      return {
+        deps,
+        content: gistFiles[selectedGistFileName]!.content,
+      }
     }
 
-    const content = yield* _(
+    const deps = yield* _(
       Effect.fromNullable(gistFiles[gistFileNames[0]!]),
       Effect.map(file => file.content.split('\n').splice(0, 10)),
       Effect.mapError(e => new GistLinkDataError({
@@ -73,6 +78,10 @@ export function fetchGistData(gistLink: string) {
         message: 'Failed to get content from gist',
       })),
     )
-    return content
+
+    return {
+      deps,
+      content: gistFiles[gistFileNames[0]!]!.content,
+    }
   })
 }
