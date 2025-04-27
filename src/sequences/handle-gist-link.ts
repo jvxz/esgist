@@ -1,3 +1,4 @@
+import type { Args } from '../lib/types/args'
 import * as p from '@clack/prompts'
 import { ArkErrors, type } from 'arktype'
 import { Data, Effect } from 'effect'
@@ -10,26 +11,30 @@ class GistLinkError extends Data.TaggedError('GistLinkError')<{
   message?: string
 }> {}
 
-export const handleGistLink = Effect.gen(function* (_) {
-  const res = yield* _(Effect.tryPromise({
-    try: async () => withCancel(async () => p.text({
-      message: 'Enter the URL of the gist:',
-      placeholder: 'https://gist.github.com/...',
-      validate(value) {
-        if (validator(value) instanceof ArkErrors) return 'Invalid URL'
-      },
-    })),
-    catch: e => new GistLinkError({
-      cause: e,
-      message: 'Failed to parse response',
-    }),
-  }))
+export function handleGistLink(gist: Args['gist']) {
+  return Effect.gen(function* (_) {
+    if (gist) return gist
 
-  if (!res) {
-    return yield* Effect.fail(new GistLinkError({
-      message: 'Gist link is required',
+    const res = yield* _(Effect.tryPromise({
+      try: async () => withCancel(async () => p.text({
+        message: 'Enter the URL of the gist:',
+        placeholder: 'https://gist.github.com/...',
+        validate(value) {
+          if (validator(value) instanceof ArkErrors) return 'Invalid URL'
+        },
+      })),
+      catch: e => new GistLinkError({
+        cause: e,
+        message: 'Failed to parse response',
+      }),
     }))
-  }
 
-  return res
-})
+    if (!res) {
+      return yield* Effect.fail(new GistLinkError({
+        message: 'Gist link is required',
+      }))
+    }
+
+    return res
+  })
+}

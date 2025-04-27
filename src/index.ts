@@ -1,3 +1,4 @@
+import type { Args } from './lib/types/args'
 import * as p from '@clack/prompts'
 import { FetchHttpClient } from '@effect/platform'
 import c from 'ansis'
@@ -14,16 +15,13 @@ const cli = cac(name)
 
 cli
   .command('', 'Run the wizard')
-  .option('--yes, -y', '', {
-    default: false,
-  })
-  .option('--template, -t <template>', '', {
-    type: [],
-  })
-  .action(async () => {
+
+  .option('--gist <link>', 'Provide Gist to use for the config')
+  .option('--yes <link>', 'Provide Gist to use for the config')
+  .action(async (args: Args) => {
     header()
 
-    const exit = await run
+    const exit = await run(args)
       .pipe(Effect.provide(FetchHttpClient.layer))
       .pipe(Effect.runPromiseExit)
 

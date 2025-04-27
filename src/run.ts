@@ -1,18 +1,24 @@
+import type { Args } from './lib/types/args'
 import { Effect } from 'effect'
 import { fetchGistData } from './sequences/fetch-gist-data'
 import { handleConfigDeps } from './sequences/handle-config-deps'
 import { handleConfigWrite } from './sequences/handle-config-write'
 import { handleGistLink } from './sequences/handle-gist-link'
 import { prepare } from './sequences/prepare'
+import { validateArgs } from './sequences/validate-args'
 
-export const run = Effect.gen(function* () {
-  const { configFilename, packageManager, isNodeProject } = yield* prepare
+export function run(rawArgs: Args) {
+  return Effect.gen(function* () {
+    const args = yield* validateArgs(rawArgs)
 
-  const gistLink = yield* handleGistLink
-  const gistData = yield* fetchGistData(gistLink)
+    const { configFilename, packageManager, isNodeProject } = yield* prepare
 
-  // only install deps if in a node project
-  if (isNodeProject) yield* handleConfigDeps(gistData.deps, packageManager)
+    const gistLink = yield* handleGistLink(args.gist)
+    const gistData = yield* fetchGistData(gistLink)
 
-  yield* handleConfigWrite(gistData.content, configFilename, packageManager)
-})
+    // only install deps if in a node project
+    if (isNodeProject) yield* handleConfigDeps(gistData.deps, packageManager)
+
+    yield* handleConfigWrite(gistData.content, configFilename, packageManager)
+  })
+}
