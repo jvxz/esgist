@@ -20,7 +20,9 @@ npx gslint --help # Display information about the CLI
 
 ## Example
 
-
+<p align="center">
+  <img src="assets/example.png" alt="gslint example" width="600" />
+</p>
 
 ## License
 
