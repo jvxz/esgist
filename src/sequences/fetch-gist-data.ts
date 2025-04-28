@@ -31,12 +31,12 @@ export function fetchGistData(
       Effect.filterOrFail(
         data => data !== null && data !== undefined,
         () => new GistLinkDataError({
-          message: 'Could not get data from Gist. Check if the Gist link is valid and available publicly',
+          message: 'Could not get data from Gist. The URL could be invalid, the Gist could be secret, or you could be rate limited',
         }),
       ),
       Effect.mapError(e => new GistLinkDataError({
         cause: e,
-        message: 'Could not get data from Gist. Check if the Gist link is valid and available publicly',
+        message: 'Could not get data from Gist. The URL could be invalid, the Gist could be secret, or you could be rate limited',
       })),
     )
 
@@ -110,7 +110,8 @@ function validateGistData(data: string) {
     )
 
     const json = yield* _(
-      Effect.try((): any => JSON.parse(data)),
+      // eslint-disable-next-line ts/no-unsafe-return
+      Effect.tryPromise(() => JSON.parse(data)),
       Effect.option,
     )
 
