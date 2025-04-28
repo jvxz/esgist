@@ -16,9 +16,10 @@ const cli = cac(name)
 cli
   .command('', 'Run the wizard')
 
-  .option('--yes, -y', 'Skip Node.js project and commit warnings (add --package-manager to restore dependency installation)')
-  .option('--package-manager, -p <name>', 'Manually specify package manager')
-  .option('--gist, -g <link>', 'Provide Gist to use for the config')
+  .option('-y, --yes', 'Skip Node.js project and commit warnings (add --package-manager to restore dependency installation)')
+  .option('-f, --force', 'Bypass validation checks')
+  .option('-p, --package-manager <name>', 'Manually specify package manager')
+  .option('-g, --gist <link>', 'Provide Gist to use for the config')
   .action(async (args: Args) => {
     header()
 

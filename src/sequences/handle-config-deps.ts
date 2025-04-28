@@ -15,25 +15,25 @@ export function handleConfigDeps(lines: string[], pm: AgentName) {
   return Effect.gen(function* (_) {
     const pkgs = getPkgs(lines)
 
-    const depsRes = yield* Effect.tryPromise({
-      try: async () => withCancel(async () => p.multiselect({
-        message: 'Select packages to install (select none to skip):',
-        options: pkgs.map((pkg) => {
-          return {
-            label: pkg,
-            value: pkg,
-          }
+    if (pkgs.length > 0) {
+      const depsRes = yield* Effect.tryPromise({
+        try: async () => withCancel(async () => p.multiselect({
+          message: 'Select packages to install (select none to skip):',
+          options: pkgs.map((pkg) => {
+            return {
+              label: pkg,
+              value: pkg,
+            }
+          }),
+          initialValues: pkgs,
+          required: false,
+        })),
+        catch: e => new GistDepsError({
+          cause: e,
+          message: 'Failed to select packages',
         }),
-        initialValues: pkgs,
-        required: false,
-      })),
-      catch: e => new GistDepsError({
-        cause: e,
-        message: 'Failed to select packages',
-      }),
-    })
+      })
 
-    if (depsRes.length > 0) {
       yield* Effect.tryPromise({
         try: async () => withCancel(async () => p.tasks([
           {

@@ -1,6 +1,7 @@
 import * as p from '@clack/prompts'
 import { HttpClient, HttpClientRequest, HttpClientResponse } from '@effect/platform'
-import { Data, Effect } from 'effect'
+import { parse } from 'acorn'
+import { Data, Effect, Option } from 'effect'
 import { GistDataSchema } from '../lib/types/gist-data'
 import { withCancel } from '../lib/utils'
 
@@ -11,7 +12,10 @@ class GistLinkDataError extends Data.TaggedError('GistLinkDataError')<{
   message?: string
 }> {}
 
-export function fetchGistData(gistLink: string) {
+export function fetchGistData(
+  gistLink: string,
+  force: boolean | undefined,
+) {
   return Effect.gen(function* (_) {
     const gistId = gistLink.match(GIST_ID_REGEX)?.[1]
 
@@ -64,6 +68,8 @@ export function fetchGistData(gistLink: string) {
         })),
       )
 
+      if (!force) yield* validateGistData(gistFiles[selectedGistFileName]!.content)
+
       return {
         deps,
         content: gistFiles[selectedGistFileName]!.content,
@@ -80,10 +86,39 @@ export function fetchGistData(gistLink: string) {
       })),
     )
 
+    if (!force) yield* validateGistData(gistFiles[gistFileNames[0]!]!.content)
+
     return {
       deps,
       content: gistFiles[gistFileNames[0]!]!.content,
       name: gistFileNames[0]!,
     }
+  })
+}
+
+/*
+validates gist data to be a valid eslint config (javascript or json)
+*/
+function validateGistData(data: string) {
+  return Effect.gen(function* (_) {
+    const js = yield* _(
+      Effect.try(() => parse(data, {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+      })),
+      Effect.option,
+    )
+
+    const json = yield* _(
+      Effect.try((): any => JSON.parse(data)),
+      Effect.option,
+    )
+
+    if (Option.isSome(js)) return 'js'
+    if (Option.isSome(json)) return 'json'
+
+    return yield* Effect.fail(new GistLinkDataError({
+      message: 'The Gist data is not valid JavaScript or JSON. Add the --force argument to bypass',
+    }))
   })
 }
