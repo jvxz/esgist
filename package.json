@@ -1,17 +1,17 @@
 {
-  "name": "gslint",
+  "name": "esgist",
   "type": "module",
   "version": "1.0.0-beta.1",
-  "description": "GitHub Gist → ESLint config",
+  "description": "Generate an ESLint config from a GitHub Gist",
   "author": "jamie <jamie@wisp.bio> (https://github.com/jvxz)",
   "license": "MIT",
-  "homepage": "https://github.com/jvxz/gslint",
+  "homepage": "https://github.com/jvxz/esgist",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jvxz/gslint.git"
+    "url": "git+https://github.com/jvxz/esgist.git"
   },
   "bugs": {
-    "url": "https://github.com/jvxz/gslint/issues"
+    "url": "https://github.com/jvxz/esgist/issues"
   },
   "keywords": [
     "eslint-config",
