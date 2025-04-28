@@ -17,7 +17,7 @@ export function handleGistLink(gist: Args['gist']) {
 
     const res = yield* _(Effect.tryPromise({
       try: async () => withCancel(async () => p.text({
-        message: 'Enter the URL of the gist:',
+        message: 'Enter the URL of the Gist:',
         placeholder: 'https://gist.github.com/...',
         validate(value) {
           if (validator(value) instanceof ArkErrors) return 'Invalid URL'

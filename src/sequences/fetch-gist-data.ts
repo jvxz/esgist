@@ -27,12 +27,12 @@ export function fetchGistData(gistLink: string) {
       Effect.filterOrFail(
         data => data !== null && data !== undefined,
         () => new GistLinkDataError({
-          message: 'Could not get data from gist. Check if the gist link is valid and available publicly.',
+          message: 'Could not get data from Gist. Check if the Gist link is valid and available publicly',
         }),
       ),
       Effect.mapError(e => new GistLinkDataError({
         cause: e,
-        message: 'Could not get data from gist. Check if the gist link is valid and available publicly.',
+        message: 'Could not get data from Gist. Check if the Gist link is valid and available publicly',
       })),
     )
 
@@ -60,7 +60,7 @@ export function fetchGistData(gistLink: string) {
         Effect.map(file => file.content.split('\n').slice(0, 10)),
         Effect.mapError(e => new GistLinkDataError({
           cause: e,
-          message: 'Failed to get content from gist',
+          message: 'Failed to get content from Gist',
         })),
       )
 
@@ -76,7 +76,7 @@ export function fetchGistData(gistLink: string) {
       Effect.map(file => file.content.split('\n').splice(0, 10)),
       Effect.mapError(e => new GistLinkDataError({
         cause: e,
-        message: 'Failed to get content from gist',
+        message: 'Failed to get content from Gist',
       })),
     )
 
