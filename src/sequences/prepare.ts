@@ -65,7 +65,7 @@ function handleNodeProject(yes: Args['yes']) {
         }),
       })
 
-      if (confirm) return false
+      if (confirm) abort()
     }
 
     return true
