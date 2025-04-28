@@ -1,7 +1,7 @@
 {
   "name": "esgist",
   "type": "module",
-  "version": "1.0.1-beta.1",
+  "version": "1.0.2-beta.1",
   "description": "Generate an ESLint config from a GitHub Gist",
   "author": "jamie <jamie@wisp.bio> (https://github.com/jvxz)",
   "license": "MIT",
