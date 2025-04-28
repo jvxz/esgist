@@ -8,7 +8,7 @@ import { execa } from 'execa'
 import { detect } from 'package-manager-detector'
 import { abort, withCancel } from '../lib/utils'
 
-const DEFAULT_PM = 'npm'
+const DEFAULT_PM: AgentName = 'npm'
 
 class PrepError extends Data.TaggedError('PrepError')<{
   cause?: unknown
@@ -74,17 +74,20 @@ function handleNodeProject(yes: Args['yes']) {
 
 function getConfig(yes: Args['yes']): Effect.Effect<PrepareResult['configFilename'] | void, PrepError> {
   return Effect.gen(function* (_) {
-    const dir = yield* _(Effect.tryPromise(async () => readdir(process.cwd())), Effect.option)
-
-    if (Option.isNone(dir)) {
-      p.log.warn('Could not scan directory. Defaulting to gist file name')
-      return yield* Effect.void
-    }
+    const dir = yield* _(Effect.tryPromise({
+      try: async () => readdir(process.cwd()),
+      catch: e => new PrepError({
+        cause: e,
+        message: 'Failed to read directory',
+      }),
+    }))
 
     const config = yield* _(
-      Effect.succeed(dir.value.filter(e => e.includes('eslint'))),
+      Effect.succeed(dir.filter(e => e.includes('eslint'))),
       Effect.map(e => e.filter(e => e.includes('js'))),
     )
+
+    if (config.length === 0) return yield* Effect.void
 
     // const _ignore = yield* _(
     //   Effect.fromNullable(dir.value.find(e => e.includes('.eSLintignore'))),
@@ -152,38 +155,39 @@ function getConfig(yes: Args['yes']): Effect.Effect<PrepareResult['configFilenam
   })
 }
 
-const getPm = Effect.gen(function* (_) {
-  const pm = yield* _(
-    Effect.tryPromise(async () => detect()),
-    Effect.filterOrElse(
-      e => e !== null,
-      () => Effect.succeed(DEFAULT_PM),
-    ),
-    Effect.option,
-  )
+function getPm(rawPm: Args['packageManager']) {
+  return Effect.gen(function* (_) {
+    if (rawPm) return rawPm as AgentName
 
-  if (Option.isNone(pm)) return DEFAULT_PM
+    const pm = yield* _(
+      Effect.tryPromise(async () => detect()),
+      Effect.option,
+    )
 
-  return pm.value
-})
+    if (Option.isNone(pm)) return DEFAULT_PM
+
+    return yield* _(
+      Effect.fromNullable(pm.value),
+      Effect.map(e => e.name),
+      Effect.orElse(() => Effect.succeed(DEFAULT_PM)),
+    )
+  })
+}
 
 export interface PrepareResult {
-  configFilename: string
+  configFilename: string | void
   packageManager: AgentName
   isNodeProject: boolean
 }
 
-export function prepare(args: Args) {
+export function prepare(args: Args): Effect.Effect<PrepareResult, PrepError> {
   return Effect.gen(function* () {
     yield* Effect.orElse(
       Effect.fromNullable(args.yes),
       () => handleUncommittedChanges,
     )
 
-    const packageManager = yield* Effect.orElse(
-      Effect.fromNullable(args.packageManager),
-      () => getPm,
-    )
+    const packageManager = yield* getPm(args.packageManager)
     const isNodeProject = yield* handleNodeProject(args.yes)
     const configFilename = yield* getConfig(args.yes)
 
@@ -191,7 +195,7 @@ export function prepare(args: Args) {
       configFilename,
       packageManager,
       isNodeProject,
-    } as PrepareResult
+    }
   })
 }
 

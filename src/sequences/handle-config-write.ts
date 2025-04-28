@@ -1,5 +1,4 @@
 import type { AgentName } from 'package-manager-detector'
-import type { PrepareResult } from './prepare'
 import { writeFile } from 'node:fs/promises'
 import * as p from '@clack/prompts'
 import c from 'ansis'
@@ -12,7 +11,7 @@ class ConfigWriteError extends Data.TaggedError('ConfigWriteError')<{
 
 export function handleConfigWrite(
   content: string,
-  filename: PrepareResult['configFilename'],
+  filename: string,
   pm: AgentName,
 ) {
   return Effect.gen(function* () {

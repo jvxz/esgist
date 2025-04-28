@@ -19,6 +19,6 @@ export function run(rawArgs: Args) {
     // only install deps if in a node project or a manual pm arg was provided
     if (isNodeProject || args.packageManager) yield* handleConfigDeps(gistData.deps, packageManager)
 
-    yield* handleConfigWrite(gistData.content, configFilename, packageManager)
+    yield* handleConfigWrite(gistData.content, configFilename ?? gistData.name, packageManager)
   })
 }

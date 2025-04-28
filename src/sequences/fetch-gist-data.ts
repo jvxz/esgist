@@ -67,6 +67,7 @@ export function fetchGistData(gistLink: string) {
       return {
         deps,
         content: gistFiles[selectedGistFileName]!.content,
+        name: selectedGistFileName,
       }
     }
 
@@ -82,6 +83,7 @@ export function fetchGistData(gistLink: string) {
     return {
       deps,
       content: gistFiles[gistFileNames[0]!]!.content,
+      name: gistFileNames[0]!,
     }
   })
 }
