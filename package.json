@@ -42,7 +42,8 @@
     "dev": "tsup --clean --watch",
     "lint": "eslint . && tsc --noEmit",
     "prepack": "nr build",
-    "release": "bumpp && pnpm publish"
+    "release": "bumpp && pnpm publish",
+    "test": "vitest"
   },
   "peerDependencies": {
     "typescript": "^5"
@@ -53,11 +54,13 @@
     "@effect/platform": "^0.80.14",
     "@types/bun": "latest",
     "@types/node": "^22.15.2",
+    "acorn": "^8.14.1",
     "arktype": "^2.1.20",
     "effect": "^3.14.14",
     "eslint": "^9.25.1",
     "execa": "^9.5.2",
     "package-manager-detector": "^1.2.0",
-    "tsup": "^8.4.0"
+    "tsup": "^8.4.0",
+    "vitest": "^3.1.2"
   }
 }
